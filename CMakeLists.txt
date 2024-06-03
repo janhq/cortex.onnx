@@ -8,6 +8,7 @@ if(UNIX AND NOT APPLE)
 endif()
 
 set(THIRD_PARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build_deps/_install)
+set(ORT_PATH ${CMAKE_CURRENT_SOURCE_DIR}/build_deps/ort)
 
 if(UNIX AND NOT APPLE)
   add_compile_options(-fPIC)
@@ -51,8 +52,7 @@ endif()
 add_library(${TARGET} SHARED 
     src/onnx_engine.cc
 )
-# cmake -S .\onnxruntime-genai\ -B .\onnxruntime-genai\build -DUSE_DML=ON -DUSE_CUDA=OFF
-# cmake --build .\onnxruntime-genai\build --config Release -j4
+
 find_library(JSONCPP
     NAMES jsoncpp
     HINTS "${THIRD_PARTY_PATH}/lib"
@@ -68,6 +68,6 @@ target_link_libraries(${TARGET} PRIVATE ${ONNXRUNTIME_GENAI_LIB} ${JSONCPP} ${TR
 target_include_directories(${TARGET} PRIVATE 
             ${CMAKE_CURRENT_SOURCE_DIR}/base
             ${CMAKE_SOURCE_DIR}/onnxruntime-genai/src
-            ${CMAKE_SOURCE_DIR}/onnxruntime-genai/ort/include
+            ${ORT_PATH}/include
             ${THIRD_PARTY_PATH}/include
 )
