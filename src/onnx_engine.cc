@@ -201,7 +201,7 @@ void OnnxEngine::HandleChatCompletion(
   }
   formatted_output += ai_prompt_;
 
-  LOG_DEBUG << formatted_output;
+  // LOG_DEBUG << formatted_output;
 
   try {
     if (req.stream) {
@@ -259,18 +259,19 @@ void OnnxEngine::HandleChatCompletion(
       params->SetSearchOption("max_length", req.max_tokens);
       params->SetSearchOption("top_p", req.top_p);
       params->SetSearchOption("temperature", req.temperature);
-      params->SetSearchOption("repetition_penalty", req.frequency_penalty);
+      // params->SetSearchOption("repetition_penalty", req.frequency_penalty);
       params->SetInputSequences(*sequences);
 
       auto output_sequences = oga_model_->Generate(*params);
-      const auto output_sequence_length = output_sequences->SequenceCount(0);
-      const auto* output_sequence_data = output_sequences->SequenceData(0);
+      const auto output_sequence_length =
+          output_sequences->SequenceCount(0) - sequences->SequenceCount(0);
+      const auto* output_sequence_data =
+          output_sequences->SequenceData(0) + sequences->SequenceCount(0);
       auto out_string =
           tokenizer_->Decode(output_sequence_data, output_sequence_length);
 
-      std::cout << "Output: " << std::endl << out_string << std::endl;
+      // std::cout << "Output: " << std::endl << out_string << std::endl;
 
-      // TODO(sang)
       std::string to_send = out_string.p_;
       auto resp_data = CreateFullReturnJson(GenerateRandomString(20), "_",
                                             to_send, "_", 0, 0);
