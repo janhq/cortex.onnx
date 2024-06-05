@@ -1,10 +1,10 @@
 #include "onnx_engine.h"
 #include <signal.h>
-#include <random>
 #include <atomic>
 #include <chrono>
 #include <functional>
 #include <iostream>
+#include <random>
 #include <thread>
 #include <vector>
 #include "chat_completion_request.h"
@@ -99,6 +99,25 @@ std::string GenerateRandomString(std::size_t length) {
   return random_string;
 }
 
+inline std::string GetModelId(const Json::Value& json_body) {
+  // First check if model exists in request
+  if (!json_body["model"].isNull()) {
+    return json_body["model"].asString();
+  } else if (!json_body["model_alias"].isNull()) {
+    return json_body["model_alias"].asString();
+  }
+
+  // We check llama_model_path for loadmodel request
+  auto input = json_body["model_path"];
+  if (!input.isNull()) {
+    auto s = input.asString();
+    std::replace(s.begin(), s.end(), '\\', '/');
+    auto const pos = s.find_last_of('/');
+    return s.substr(pos + 1);
+  }
+  return {};
+}
+
 }  // namespace
 
 OnnxEngine::OnnxEngine() {
@@ -106,14 +125,14 @@ OnnxEngine::OnnxEngine() {
 }
 
 void OnnxEngine::LoadModel(
-    std::shared_ptr<Json::Value> jsonBody,
+    std::shared_ptr<Json::Value> json_body,
     std::function<void(Json::Value&&, Json::Value&&)>&& callback) {
-  auto path = jsonBody->get("model_path", "").asString();
-  user_prompt_ = jsonBody->get("user_prompt", "USER: ").asString();
-  ai_prompt_ = jsonBody->get("ai_prompt", "ASSISTANT: ").asString();
+  auto path = json_body->get("model_path", "").asString();
+  user_prompt_ = json_body->get("user_prompt", "USER: ").asString();
+  ai_prompt_ = json_body->get("ai_prompt", "ASSISTANT: ").asString();
   system_prompt_ =
-      jsonBody->get("system_prompt", "ASSISTANT's RULE: ").asString();
-  pre_prompt_ = jsonBody->get("pre_prompt", "").asString();
+      json_body->get("system_prompt", "ASSISTANT's RULE: ").asString();
+  pre_prompt_ = json_body->get("pre_prompt", "").asString();
   try {
     std::cout << "Creating model..." << std::endl;
     oga_model_ = OgaModel::Create(path.c_str());
@@ -128,8 +147,12 @@ void OnnxEngine::LoadModel(
     status["is_stream"] = false;
     status["status_code"] = k200OK;
     callback(std::move(status), std::move(json_resp));
-    LOG_INFO << "Model loaded successfully: " << path;
+    model_id_ = GetModelId(*json_body);
+    LOG_INFO << "Model loaded successfully: " << path
+             << ", model_id: " << model_id_;
     model_loaded_ = true;
+    start_time_ = std::chrono::system_clock::now().time_since_epoch() /
+                  std::chrono::milliseconds(1);
   } catch (const std::exception& e) {
     std::cout << e.what() << std::endl;
     oga_model_.reset();
@@ -147,12 +170,12 @@ void OnnxEngine::LoadModel(
 }
 
 void OnnxEngine::HandleChatCompletion(
-    std::shared_ptr<Json::Value> jsonBody,
+    std::shared_ptr<Json::Value> json_body,
     std::function<void(Json::Value&&, Json::Value&&)>&& callback) {
   if (!CheckModelLoaded(callback))
     return;
-  auto req = onnx::inferences::fromJson(jsonBody);
-  auto is_stream = jsonBody->get("stream", false).asBool();
+  auto req = onnx::inferences::fromJson(json_body);
+  auto is_stream = json_body->get("stream", false).asBool();
 
   std::string formatted_output;
   for (const auto& message : req.messages) {
@@ -203,7 +226,9 @@ void OnnxEngine::HandleChatCompletion(
         auto out_string = tokenizer_stream_->Decode(new_token);
         std::cout << out_string;
         const std::string str =
-            "data: " + CreateReturnJson(GenerateRandomString(20), "_", out_string) + "\n\n";
+            "data: " +
+            CreateReturnJson(GenerateRandomString(20), "_", out_string) +
+            "\n\n";
         Json::Value resp_data;
         resp_data["data"] = str;
         Json::Value status;
@@ -247,7 +272,8 @@ void OnnxEngine::HandleChatCompletion(
 
       // TODO(sang)
       std::string to_send = out_string.p_;
-      auto resp_data = CreateFullReturnJson(GenerateRandomString(20), "_", to_send, "_", 0, 0);
+      auto resp_data = CreateFullReturnJson(GenerateRandomString(20), "_",
+                                            to_send, "_", 0, 0);
       Json::Value status;
       status["is_done"] = true;
       status["has_error"] = false;
@@ -313,14 +339,29 @@ void OnnxEngine::GetModels(
     std::shared_ptr<Json::Value> json_body,
     std::function<void(Json::Value&&, Json::Value&&)>&& callback) {
   Json::Value json_resp;
-  json_resp["message"] = "Engine does not support get models method yet";
+  Json::Value model_array = Json::arrayValue;
+
+  if (model_loaded_) {
+    Json::Value val;
+    val["id"] = model_id_;
+    val["engine"] = "cortex.onnx";
+    val["start_time"] = start_time_;
+    val["vram"] = "-";
+    val["ram"] = "-";
+    val["object"] = "model";
+    model_array.append(val);
+  }
+
+  json_resp["object"] = "list";
+  json_resp["data"] = model_array;
+
   Json::Value status;
-  status["is_done"] = false;
-  status["has_error"] = true;
+  status["is_done"] = true;
+  status["has_error"] = false;
   status["is_stream"] = false;
-  status["status_code"] = k409Conflict;
+  status["status_code"] = k200OK;
   callback(std::move(status), std::move(json_resp));
-  LOG_WARN << "Engine does not support get models method yet";
+  LOG_INFO << "Running models responded";
 }
 
 bool OnnxEngine::CheckModelLoaded(

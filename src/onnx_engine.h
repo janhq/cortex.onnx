@@ -46,5 +46,7 @@ class OnnxEngine : public EngineI {
   std::string ai_prompt_;
   std::string system_prompt_;
   std::string pre_prompt_;
+  std::string model_id_;
+  uint64_t start_time_;
 };
 }  // namespace cortex_onnx
