@@ -48,7 +48,7 @@ endif
 
 package:
 ifeq ($(OS),Windows_NT)
-	@powershell -Command "mkdir -p cortex.onnx; cp build\Release\engine.dll cortex.onnx\; cp .\examples\server\build\Release\*.dll cortex.onnx\; 7z a -ttar temp.tar cortex.onnx\*; 7z a -tgzip cortex.onnx.tar.gz temp.tar;"
+	@powershell -Command "mkdir -p cortex.onnx; cp build\Release\engine.dll cortex.onnx\; cp .\examples\server\build\Release\server.exe cortex.onnx\; cp .\examples\server\build\Release\*.dll cortex.onnx\; 7z a -ttar temp.tar cortex.onnx\*; 7z a -tgzip cortex.onnx.tar.gz temp.tar;"
 else
 	@echo "Skipping package"
 	@exit 0
