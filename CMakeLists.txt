@@ -38,6 +38,8 @@ set(ORT_GENAI_LIB_DIR ${CMAKE_SOURCE_DIR}/onnxruntime-genai/build/Release)
 MESSAGE("ORT_GENAI_LIB_DIR=" ${ORT_GENAI_LIB_DIR})
 MESSAGE("CMAKE_SOURCE_DIR=" ${CMAKE_SOURCE_DIR})
 
+set(RE2 ${CMAKE_SOURCE_DIR}/build_deps/ort)
+
 if(WIN32)
   set(ONNXRUNTIME_GENAI_LIB "onnxruntime-genai.dll")
   set(ONNXRUNTIME_GENAI_DEPENDENCY "*.dll")
@@ -63,11 +65,12 @@ find_library(TRANTOR
     HINTS "${THIRD_PARTY_PATH}/lib"
 )
 target_link_directories(${TARGET} PRIVATE ${ORT_GENAI_LIB_DIR})
-target_link_libraries(${TARGET} PRIVATE ${ONNXRUNTIME_GENAI_LIB} ${JSONCPP} ${TRANTOR}
+target_link_libraries(${TARGET} PRIVATE ${ONNXRUNTIME_GENAI_LIB} ${JSONCPP} ${TRANTOR} ${RE2}/lib/re2.lib 
                                               ${CMAKE_THREAD_LIBS_INIT})
 target_include_directories(${TARGET} PRIVATE 
             ${CMAKE_CURRENT_SOURCE_DIR}/base
             ${CMAKE_SOURCE_DIR}/onnxruntime-genai/src
             ${ORT_PATH}/include
             ${THIRD_PARTY_PATH}/include
+            ${RE2}/include 
 )

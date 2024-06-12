@@ -122,6 +122,16 @@ inline std::string GetModelId(const Json::Value& json_body) {
 
 OnnxEngine::OnnxEngine() {
   handle_ = std::make_unique<OgaHandle>();
+  // std::string tiktoken_conf = "E:\\workspace\\tokenizer\\conf\\tiktoken.toml";
+  // try {
+  //   sw::tokenizer::TiktokenFactory tiktoken_factory(tiktoken_conf);
+  //   auto tiktoken = tiktoken_factory.create("cl100k_base");
+  //   if (tiktoken.decode(tiktoken.encode("hello world")) != "hello world") {
+  //     std::cerr << "failed to test tiktoken encode and decode" << std::endl;
+  //   }
+  // } catch (const sw::tokenizer::Error& e) {
+  //   std::cerr << "failed to do test: " << e.what() << std::endl;
+  // }
 }
 
 void OnnxEngine::LoadModel(
@@ -133,6 +143,14 @@ void OnnxEngine::LoadModel(
   system_prompt_ =
       json_body->get("system_prompt", "ASSISTANT's RULE: ").asString();
   pre_prompt_ = json_body->get("pre_prompt", "").asString();
+  Oga::SetLogBool("enabled", true);
+  Oga::SetLogBool("generate_next_token", true);
+  Oga::SetLogBool("model_logits", true);
+  // Oga::SetLogBool("model_input_values", true);
+  // Oga::SetLogBool("model_output_shapes", true);
+  // Oga::SetLogBool("model_output_values", true);
+  // Oga::SetLogString("filename", "./test.log");
+
   try {
     std::cout << "Creating model..." << std::endl;
     oga_model_ = OgaModel::Create(path.c_str());
@@ -167,6 +185,7 @@ void OnnxEngine::LoadModel(
     status["status_code"] = k500InternalServerError;
     callback(std::move(status), std::move(json_resp));
   }
+  
 }
 
 void OnnxEngine::HandleChatCompletion(
@@ -201,7 +220,7 @@ void OnnxEngine::HandleChatCompletion(
   }
   formatted_output += ai_prompt_;
 
-  // LOG_DEBUG << formatted_output;
+  LOG_DEBUG << formatted_output;
 
   try {
     if (req.stream) {
@@ -211,8 +230,8 @@ void OnnxEngine::HandleChatCompletion(
       auto params = OgaGeneratorParams::Create(*oga_model_);
       // TODO(sang)
       params->SetSearchOption("max_length", req.max_tokens);
-      params->SetSearchOption("top_p", req.top_p);
-      params->SetSearchOption("temperature", req.temperature);
+      // params->SetSearchOption("top_p", req.top_p);
+      // params->SetSearchOption("temperature", req.temperature);
       // params->SetSearchOption("repetition_penalty", 0.95);
       params->SetInputSequences(*sequences);
 
@@ -254,25 +273,34 @@ void OnnxEngine::HandleChatCompletion(
     } else {
       auto sequences = OgaSequences::Create();
       tokenizer_->Encode(formatted_output.c_str(), *sequences);
+      // auto tokenizer = TikTokenizer::Create(*oga_model_);
+      std::cout << "abd1" << std::endl;
+      // tokenizer->Encode(formatted_output.c_str(), *sequences);
+      std::cout << "abd2" << std::endl;
 
       auto params = OgaGeneratorParams::Create(*oga_model_);
       params->SetSearchOption("max_length", req.max_tokens);
       params->SetSearchOption("top_p", req.top_p);
       params->SetSearchOption("temperature", req.temperature);
+      // params->SetSearchOptionBool("do_sample", false);
       // params->SetSearchOption("repetition_penalty", req.frequency_penalty);
       params->SetInputSequences(*sequences);
-
+      std::cout << "abd3" << std::endl;
       auto output_sequences = oga_model_->Generate(*params);
+      std::cout << "abd" << std::endl;
+      // return;
       const auto output_sequence_length =
           output_sequences->SequenceCount(0) - sequences->SequenceCount(0);
       const auto* output_sequence_data =
           output_sequences->SequenceData(0) + sequences->SequenceCount(0);
       auto out_string =
           tokenizer_->Decode(output_sequence_data, output_sequence_length);
+      // auto out_string = 
+      //      tokenizer->Decode(output_sequence_data, output_sequence_length);
 
-      // std::cout << "Output: " << std::endl << out_string << std::endl;
+      std::cout << "Output: " << std::endl << out_string << std::endl;
 
-      std::string to_send = out_string.p_;
+      std::string to_send = "out_string.p_";
       auto resp_data = CreateFullReturnJson(GenerateRandomString(20), "_",
                                             to_send, "_", 0, 0);
       Json::Value status;
