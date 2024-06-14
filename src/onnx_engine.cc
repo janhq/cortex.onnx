@@ -222,7 +222,7 @@ void OnnxEngine::HandleChatCompletion(
         params->SetInputSequences(*sequences);
 
         auto generator = OgaGenerator::Create(*oga_model_, *params);
-        while (!generator->IsDone()) {
+        while (!generator->IsDone() && model_loaded_) {
           generator->ComputeLogits();
           generator->GenerateNextToken();
 
@@ -244,11 +244,25 @@ void OnnxEngine::HandleChatCompletion(
           cb(std::move(status), std::move(resp_data));
         }
 
+        if (!model_loaded_) {
+          LOG_WARN << "Model unloaded during inference";
+          Json::Value respData;
+          respData["data"] = std::string();
+          Json::Value status;
+          status["is_done"] = false;
+          status["has_error"] = true;
+          status["is_stream"] = true;
+          status["status_code"] = k200OK;
+          cb(std::move(status), std::move(respData));
+          return;
+        }
+
         LOG_INFO << "End of result";
         Json::Value resp_data;
         const std::string str =
-            "data: " + CreateReturnJson("gdsf", "_", "", "stop") + "\n\n" +
-            "data: [DONE]" + "\n\n";
+            "data: " +
+            CreateReturnJson(GenerateRandomString(20), "_", "", "stop") +
+            "\n\n" + "data: [DONE]" + "\n\n";
         resp_data["data"] = str;
         Json::Value status;
         status["is_done"] = true;
