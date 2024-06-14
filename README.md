@@ -77,7 +77,7 @@ curl http://localhost:3928/loadmodel \
 ```
 **Step 4: Making an Inference**
 
-```bash title="cortex-cpp Inference"
+```bash title="cortex.onnx Inference"
 curl http://localhost:3928/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
