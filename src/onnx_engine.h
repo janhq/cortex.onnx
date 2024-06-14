@@ -6,6 +6,7 @@
 #include "json/value.h"
 #include "ort_genai.h"
 #include "ort_genai_c.h"
+#include "trantor/utils/ConcurrentTaskQueue.h"
 
 namespace cortex_onnx {
 class OnnxEngine : public EngineI {
@@ -48,5 +49,6 @@ class OnnxEngine : public EngineI {
   std::string pre_prompt_;
   std::string model_id_;
   uint64_t start_time_;
+  std::unique_ptr<trantor::ConcurrentTaskQueue> q_;
 };
 }  // namespace cortex_onnx
