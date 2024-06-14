@@ -180,7 +180,7 @@ void OnnxEngine::HandleChatCompletion(
   auto req = onnx::inferences::fromJson(json_body);
   auto is_stream = json_body->get("stream", false).asBool();
 
-  std::string formatted_output;
+  std::string formatted_output = pre_prompt_;
   for (const auto& message : req.messages) {
     std::string input_role = message["role"].asString();
     std::string role;
