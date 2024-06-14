@@ -205,13 +205,12 @@ void OnnxEngine::HandleChatCompletion(
   formatted_output += ai_prompt_;
 
   // LOG_DEBUG << formatted_output;
-  // TODO(sang)
-  q_->runTaskInQueue([this, cb = std::move(callback), formatted_output, req] {
+  q_->runTaskInQueue([this, cb = std::move(callback),
+                      fo = std::move(formatted_output), req] {
     try {
       if (req.stream) {
-
         auto sequences = OgaSequences::Create();
-        tokenizer_->Encode(formatted_output.c_str(), *sequences);
+        tokenizer_->Encode(fo.c_str(), *sequences);
 
         auto params = OgaGeneratorParams::Create(*oga_model_);
         // TODO(sang)
@@ -273,7 +272,7 @@ void OnnxEngine::HandleChatCompletion(
 
       } else {
         auto sequences = OgaSequences::Create();
-        tokenizer_->Encode(formatted_output.c_str(), *sequences);
+        tokenizer_->Encode(fo.c_str(), *sequences);
 
         auto params = OgaGeneratorParams::Create(*oga_model_);
         params->SetSearchOption("max_length", req.max_tokens);
