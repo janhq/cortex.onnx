@@ -229,7 +229,7 @@ void OnnxEngine::HandleChatCompletion(
           const int32_t num_tokens = generator->GetSequenceCount(0);
           int32_t new_token = generator->GetSequenceData(0)[num_tokens - 1];
           auto out_string = tokenizer_stream_->Decode(new_token);
-          std::cout << out_string;
+          // std::cout << out_string;
           const std::string str =
               "data: " +
               CreateReturnJson(GenerateRandomString(20), "_", out_string) +
