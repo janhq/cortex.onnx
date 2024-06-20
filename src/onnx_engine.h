@@ -49,6 +49,7 @@ class OnnxEngine : public EngineI {
   std::string pre_prompt_;
   std::string model_id_;
   uint64_t start_time_;
+  int max_history_chat_;
   std::unique_ptr<trantor::ConcurrentTaskQueue> q_;
 };
 }  // namespace cortex_onnx
