@@ -14,10 +14,6 @@ on:
         description: "HuggingFace target model ID"
         required: true
         type: string
-
-  push:
-    branches:
-      - feat/model_converter_ci
   
 env:
   USER_NAME: cortexhub
