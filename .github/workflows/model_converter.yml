@@ -6,15 +6,21 @@ on:
       hf_model_id:
         description: "HuggingFace model ID"
         required: true
-        type: string
+        default: meta-llama/Meta-Llama-3-8B-Instruct
       model_size:
         description: "The model size"
         required: true
         type: string
+        default: 8B
       hf_target_model_id:
         description: "HuggingFace target model ID"
         required: true
         type: string
+        default: llama3_test
+  
+  push:
+    branches:
+      - feat/model_converter_ci
 
 env:
   USER_NAME: cortexhub
