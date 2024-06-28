@@ -1,0 +1,112 @@
+name: Model Converter - ONNX
+
+on:
+  workflow_dispatch:
+    inputs:
+      hf_model_id:
+        description: "HuggingFace model ID"
+        required: true
+      model_size:
+        description: "The model size"
+        required: true
+        type: string
+      hf_target_model_id:
+        description: "HuggingFace target model ID"
+        required: true
+        type: string
+  
+env:
+  USER_NAME: cortexhub
+  MODEL_ID: ${{ inputs.hf_model_id }}
+  MODEL_SIZE: ${{ inputs.model_size }}
+  TARGET_MODEL_ID: ${{ inputs.hf_target_model_id }}
+  PRECISION: int4
+  EXECUTOR: dml
+  ONNXRUNTIME_GENAI_VERSION: 0.3.0
+  
+jobs:
+  converter:
+    runs-on: windows-amd
+    steps:
+      - name: Clone
+        id: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Login to HuggingFace Hub
+        shell: powershell
+        run: |
+          pip install huggingface_hub hf-transfer fire
+          pip install torch transformers onnx onnxruntime sentencepiece
+
+      - name: Misc. env vars
+        shell: powershell
+        run: |
+          echo "Model ID: $env:MODEL_ID"
+          echo "PRECISION: $env:PRECISION"
+          echo "EXECUTOR: $env:EXECUTOR"
+
+          $MODEL_ID = $env:MODEL_ID
+          $ADDR = $MODEL_ID -split '/'
+          $ADDR_LENGTH = $ADDR.Length
+
+          $MODEL_NAME = $ADDR[$ADDR_LENGTH - 1]
+          if ($MODEL_NAME -ne $MODEL_NAME.ToLower()) {
+              $lowercase_model_name = $MODEL_NAME.ToLower()
+          } else {
+              $lowercase_model_name = $MODEL_NAME
+          }
+          Add-Content -Path $env:GITHUB_ENV -Value "MODEL_NAME=$lowercase_model_name"
+
+      - name: Install onnx.genai dependencies
+        shell: powershell
+        run: |
+          pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
+          python -m onnxruntime_genai.models.builder --help
+
+      - name: Prepare folders
+        shell: powershell
+        run: |
+          New-Item -Path $env:MODEL_NAME -ItemType Directory
+
+          New-Item -Path "$env:MODEL_NAME\hf" -ItemType Directory
+          New-Item -Path "$env:MODEL_NAME\onnx" -ItemType Directory
+          New-Item -Path "$env:MODEL_NAME\cache" -ItemType Directory
+
+      - name: Download HF model
+        shell: powershell
+        run: |
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+          $env:HF_HUB_ENABLE_HF_TRANSFER = 1
+          huggingface-cli download --repo-type model --local-dir "$env:MODEL_NAME/hf" $env:MODEL_ID
+          huggingface-cli logout
+
+      - name: Convert to ONNX - DirectML - INT4
+        shell: powershell
+        run: |
+          python -m onnxruntime_genai.models.builder -m "${{ env.MODEL_NAME }}\hf" -o "${{ env.MODEL_NAME }}\onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          
+      # - name: Generate Model metadata
+      #   shell: powershell
+      #   run: |
+      #     Copy-Item -Path "./models/README.md" -Destination "$env:MODEL_NAME/"
+      #     python modelCardGen.py --modelId=$env:MODEL_ID
+
+      - name: Upload to HF
+        shell: powershell
+        run: |
+          Get-ChildItem -Path "$env:MODEL_NAME\onnx" -Force
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
+          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}\onnx . --revision "${{ env.MODEL_SIZE }}-onnx"
+          huggingface-cli logout
+
+      - name: Cleanup
+        if: always()
+        shell: powershell
+        run: |
+          Remove-Item -Recurse -Force -Path "$env:MODEL_NAME"
