@@ -14,6 +14,10 @@ on:
         description: "HuggingFace target model ID"
         required: true
         type: string
+
+  push:
+    branches:
+      - feat/model_converter_ci
   
 env:
   USER_NAME: cortexhub
@@ -22,7 +26,8 @@ env:
   TARGET_MODEL_ID: ${{ inputs.hf_target_model_id }}
   PRECISION: int4
   EXECUTOR: dml
-
+  ONNXRUNTIME_GENAI_VERSION: 0.3.0
+  
 jobs:
   converter:
     runs-on: windows-amd
@@ -65,7 +70,7 @@ jobs:
       - name: Install onnx.genai dependencies
         shell: powershell
         run: |
-          pip install --pre onnxruntime-genai
+          pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
           python -m onnxruntime_genai.models.builder --help
 
       - name: Prepare folders
