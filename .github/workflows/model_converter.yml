@@ -16,7 +16,7 @@ on:
         type: string
   
 env:
-  USER_NAME: jan-hq
+  USER_NAME: cortexhub
   MODEL_ID: ${{ inputs.hf_model_id }}
   MODEL_SIZE: ${{ inputs.model_size }}
   TARGET_MODEL_ID: ${{ inputs.hf_target_model_id }}
