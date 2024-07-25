@@ -38,7 +38,9 @@ endif
 build-example-server:
 ifeq ($(OS),Windows_NT)
 	@powershell -Command "mkdir -p .\examples\server\build\Release\engines\cortex.onnx; cd .\examples\server\build; cmake .. $(CMAKE_EXTRA_FLAGS); cmake --build . --config Release;"
-	@powershell -Command "cp .\build_deps\ort\lib\*.dll .\examples\server\build\Release\;"
+	@powershell -Command "cp .\build_deps\ort\lib\D3D12Core.dll .\examples\server\build\Release\;"
+	@powershell -Command "cp .\build_deps\ort\lib\DirectML.dll .\examples\server\build\Release\;"
+	@powershell -Command "cp .\build_deps\ort\lib\onnxruntime.dll .\examples\server\build\Release\onnxruntime.rel.dll;"
 	@powershell -Command "cp .\onnxruntime-genai\build\Release\onnxruntime-genai.dll .\examples\server\build\Release\;"
 	@powershell -Command "cp .\build\Release\engine.dll .\examples\server\build\Release\engines\cortex.onnx\;"
 else 

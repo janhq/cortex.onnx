@@ -566,3 +566,4 @@ onnxruntime-genai/build
 .DS_Store
 
 uploads/**
+!third-party/onnxruntime-*/lib/onnxruntime.rel.lib
