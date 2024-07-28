@@ -51,5 +51,6 @@ class OnnxEngine : public EngineI {
   uint64_t start_time_;
   int max_history_chat_;
   std::unique_ptr<trantor::ConcurrentTaskQueue> q_;
+  std::string path_; 
 };
 }  // namespace cortex_onnx
