@@ -1,0 +1,126 @@
+name: Convert model to ONNX
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_model_id:
+        description: "Source HuggingFace model ID to pull. For ex: meta-llama/Meta-Llama-3.1-8B-Instruct"
+        required: true
+      source_model_size:
+        description: "The model size. For ex: 8B"
+        required: true
+        type: string
+      target_model_id:
+        description: "Target HuggingFace model ID to push. For ex: cortexso/llama3.1"
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+  
+env:
+  USER_NAME: jan-hq
+  SOURCE_MODEL_ID: ${{ inputs.source_model_id }}
+  SOURCE_MODEL_SIZE: ${{ inputs.source_model_size }}
+  TARGET_MODEL_ID: ${{ inputs.target_model_id }}
+  PRECISION: int4                   # Valid values: int4,fp16,fp3
+  EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
+  ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
+  
+jobs:
+  converter:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: '3.11.x'
+          architecture: 'x64'
+
+      - name: Cache Python packages
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.local/share/pip
+            .venv
+          key: ${{ runner.os }}-pip-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python.exe -m pip install --upgrade pip
+          pip install huggingface_hub hf-transfer fire numpy torch transformers onnx onnxruntime sentencepiece
+
+          if ($env:EXECUTOR -eq 'cpu') {
+            pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
+          } elseif ($env:EXECUTOR -eq 'dml') {
+            pip install --pre onnxruntime-genai-directml=="$env:ONNXRUNTIME_GENAI_VERSION"
+          } elseif ($env:EXECUTOR -eq 'cuda') {
+            pip install --pre onnxruntime-genai-cuda=="$env:ONNXRUNTIME_GENAI_VERSION" --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
+          } else {
+            Write-Host "Error: Unknown EXECUTOR value: $env:EXECUTOR"
+            exit 1
+          }
+
+          python -m onnxruntime_genai.models.builder --help
+
+      - name: Extract MODEL_NAME
+        shell: powershell
+        run: |
+          $SOURCE_MODEL_ID = "${{ env.SOURCE_MODEL_ID }}"
+          $ADDR = $SOURCE_MODEL_ID -split '/'
+          $MODEL_NAME = $ADDR[-1]
+          $MODEL_NAME_LOWER = $MODEL_NAME.ToLower()
+          echo "MODEL_NAME=$MODEL_NAME_LOWER" >> $env:GITHUB_ENV
+          echo "MODEL_NAME_LOWER=$MODEL_NAME_LOWER" # For debugging
+
+      - name: Print environment variables
+        run: |
+          echo "SOURCE_MODEL_ID: ${{ env.SOURCE_MODEL_ID }}"
+          echo "PRECISION: ${{ env.PRECISION }}"
+          echo "EXECUTOR: ${{ env.EXECUTOR }}"
+          echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
+
+      - name: Prepare folders
+        run: |
+          mkdir -p ${{ env.MODEL_NAME }}/hf
+          mkdir -p ${{ env.MODEL_NAME }}/onnx
+          mkdir -p ${{ env.MODEL_NAME }}/cache
+
+      - name: Cache Hugging Face model
+        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ${{ env.MODEL_NAME }}/hf
+          key: ${{ runner.os }}-hf-model-${{ github.sha }}
+          restore-keys: |
+            {{ runner.os }}-hf-model-
+
+      - name: Download Hugging Face model
+        run: |
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+          huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
+          huggingface-cli logout
+
+      - name: Convert to ONNX - DirectML - INT4
+        run: |
+          python -m onnxruntime_genai.models.builder -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+
+      # - name: Upload to Hugging Face
+      #   run: |
+      #     Get-ChildItem -Path "${{ env.MODEL_NAME }}/onnx" -Force
+      #     huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
+      #     huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.MODEL_SIZE }}-onnx"
+      #     huggingface-cli logout
+
+      - name: Cleanup
+        if: always()
+        run: |
+          Remove-Item -Recurse -Force -Path "${{ env.MODEL_NAME }}"
