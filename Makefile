@@ -20,7 +20,7 @@ endif
 
 build-onnxruntime:
 ifeq ($(OS),Windows_NT) # Windows
-	@powershell -Command "cmake -S .\onnxruntime-genai\ -B .\onnxruntime-genai\build -DUSE_DML=ON -DUSE_CUDA=OFF -DENABLE_PYTHON=OFF -DORT_HOME=\".\build_deps\ort\";"
+	@powershell -Command "cmake -S .\onnxruntime-genai\ -B .\onnxruntime-genai\build -DUSE_DML=ON -DUSE_CUDA=OFF -DUSE_ROCM=OFF -DENABLE_PYTHON=OFF -DORT_HOME=\".\build_deps\ort\";"
 	@powershell -Command "cmake --build .\onnxruntime-genai\build --config Release -j4;"
 else  # Unix-like systems (Linux and MacOS)
 	@echo "Skipping install dependencies"
