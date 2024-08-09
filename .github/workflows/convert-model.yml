@@ -25,9 +25,9 @@ concurrency:
   
 env:
   USER_NAME: jan-hq
-  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3.1-8B-Instruct #${{ inputs.source_model_id }}
+  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3-8B-Instruct #${{ inputs.source_model_id }}
   SOURCE_MODEL_SIZE: 8B #${{ inputs.source_model_size }}
-  TARGET_MODEL_ID: cortexso/llama3.1 #${{ inputs.target_model_id }}
+  TARGET_MODEL_ID: cortexso/llama3 #${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
   ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
