@@ -109,24 +109,25 @@ jobs:
           restore-keys: |
             {{ runner.os }}-hf-model-
 
-      - name: Download Hugging Face model
-        run: |
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
-          huggingface-cli logout
+      # - name: Download Hugging Face model
+      #   run: |
+      #     huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+      #     huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
+      #     huggingface-cli logout
 
       - name: Convert to ONNX - DirectML - INT4
         shell: powershell
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          # python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          python3 .\onnxruntime-genai\src\python\py\models\builder.py -m "T:\Meta-Llama3-8B-Instruct\" -o C:\Users\jan\alex\llama3.1 -p int4 -e dml
           huggingface-cli logout
 
       - name: Upload to Hugging Face
         run: |
           Get-ChildItem -Path "${{ env.MODEL_NAME }}/onnx" -Force
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
-          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
+          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} C:\Users\jan\alex\llama3.1 . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
           huggingface-cli logout
 
       - name: Cleanup
