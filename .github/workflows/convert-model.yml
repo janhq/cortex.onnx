@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies
         shell: powershell
         run: |
-          python.exe -m ensurepip
+          # python.exe -m ensurepip
           # python.exe -m pip install --upgrade pip
           pip3 install huggingface_hub hf-transfer numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
 
