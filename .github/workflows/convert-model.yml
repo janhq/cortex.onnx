@@ -107,17 +107,17 @@ jobs:
           restore-keys: |
             {{ runner.os }}-hf-model-
 
-      # - name: Download Hugging Face model
-      #   run: |
-      #     huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-      #     huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
-      #     huggingface-cli logout
+      - name: Download Hugging Face model
+        run: |
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+          huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
+          huggingface-cli logout
 
       - name: Convert to ONNX - DirectML - INT4
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           cd onnxruntime-genai/src/python/py/models
-          python3 builder.py -m ${{ env.SOURCE_MODEL_ID }} -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          python3 builder.py -i "../../../../../${{ env.MODEL_NAME }}/hf" -o "../../../../../${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
           huggingface-cli logout
 
       # - name: Upload to Hugging Face
