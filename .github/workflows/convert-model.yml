@@ -1,6 +1,10 @@
 name: Convert model to ONNX
 
 on:
+  push:
+    # Sequence of patterns matched against refs/heads
+    branches:
+      - 'chore/convert-onnx'
   workflow_dispatch:
     inputs:
       source_model_id:
