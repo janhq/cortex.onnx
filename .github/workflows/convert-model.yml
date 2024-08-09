@@ -26,7 +26,7 @@ concurrency:
 env:
   USER_NAME: cortexso
   SOURCE_MODEL_ID: meta-llama/Meta-Llama-3.1-8B-Instruct #${{ inputs.source_model_id }}
-  SOURCE_MODEL_SIZE: 8B #${{ inputs.source_model_size }}
+  SOURCE_MODEL_SIZE: 8b #${{ inputs.source_model_size }}
   TARGET_MODEL_ID: llama3.1 #${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
@@ -34,7 +34,7 @@ env:
   
 jobs:
   converter:
-    runs-on: windows-latest
+    runs-on: windows-4090
     steps:
       - name: Checkout
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
@@ -125,7 +125,7 @@ jobs:
         run: |
           Get-ChildItem -Path "${{ env.MODEL_NAME }}/onnx" -Force
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
-          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.MODEL_SIZE }}-onnx"
+          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
           huggingface-cli logout
 
       - name: Cleanup
