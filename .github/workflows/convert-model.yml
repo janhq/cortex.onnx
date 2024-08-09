@@ -19,9 +19,9 @@ on:
         required: true
         type: string
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+#   cancel-in-progress: true
   
 env:
   USER_NAME: cortexso
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4 # v5.1.1
         with:
-          python-version: '3.10'
+          python-version: '3.12'
           architecture: 'x64'
 
       - name: Cache Python packages
@@ -59,10 +59,11 @@ jobs:
             ${{ runner.os }}-pip-
 
       - name: Install dependencies
+        shell: powershell
         run: |
           python.exe -m ensurepip
           # python.exe -m pip install --upgrade pip
-          pip3 install huggingface_hub==0.23.3 hf-transfer fire numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
+          pip3 install huggingface_hub hf-transfer fire numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
 
           # if ($env:EXECUTOR -eq 'cpu') {
           #   pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
@@ -115,11 +116,10 @@ jobs:
           huggingface-cli logout
 
       - name: Convert to ONNX - DirectML - INT4
+        shell: powershell
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          cd onnxruntime-genai/src/python/py/models
-          python3 builder.py -i "../../../../../${{ env.MODEL_NAME }}/hf" -o "../../../../../${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
-          cd "../../../../.."
+          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
           huggingface-cli logout
 
       - name: Upload to Hugging Face
