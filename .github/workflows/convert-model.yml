@@ -25,9 +25,9 @@ on:
   
 env:
   USER_NAME: cortexso
-  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3.1-8B-Instruct #${{ inputs.source_model_id }}
-  SOURCE_MODEL_SIZE: 8b #${{ inputs.source_model_size }}
-  TARGET_MODEL_ID: llama3.1 #${{ inputs.target_model_id }}
+  SOURCE_MODEL_ID: google/gemma-2b #${{ inputs.source_model_id }}
+  SOURCE_MODEL_SIZE: 2b #${{ inputs.source_model_size }}
+  TARGET_MODEL_ID: gemma2 #${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
   ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
@@ -109,13 +109,13 @@ jobs:
           huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           huggingface-cli logout
 
-      - name: Cache Hugging Face model
-        uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
-        with:
-          path: ${{ env.MODEL_NAME }}/hf
-          key: ${{ runner.os }}-hf-model-${{ github.sha }}
-          restore-keys: |
-            {{ runner.os }}-hf-model-
+      # - name: Cache Hugging Face model
+      #   uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      #   with:
+      #     path: ${{ env.MODEL_NAME }}/hf
+      #     key: ${{ runner.os }}-hf-model-${{ github.sha }}
+      #     restore-keys: |
+      #       {{ runner.os }}-hf-model-
 
       - name: Convert to ONNX - DirectML - INT4
         shell: powershell
