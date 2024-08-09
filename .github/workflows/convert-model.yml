@@ -34,7 +34,7 @@ env:
   
 jobs:
   converter:
-    runs-on: windows-4090-2
+    runs-on: windows-amd
     steps:
       - name: Checkout
         uses: actions/checkout@v4 # v4.1.7
