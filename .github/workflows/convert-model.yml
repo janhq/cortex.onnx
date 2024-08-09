@@ -74,7 +74,7 @@ jobs:
           #   exit 1
           # }
 
-          python -m onnxruntime_genai.models.builder --help
+          # python -m onnxruntime_genai.models.builder --help
 
       - name: Extract MODEL_NAME
         shell: powershell
