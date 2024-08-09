@@ -62,7 +62,7 @@ jobs:
         run: |
           python.exe -m ensurepip
           # python.exe -m pip install --upgrade pip
-          pip install huggingface_hub==0.23.3 hf-transfer fire numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
+          pip3 install huggingface_hub==0.23.3 hf-transfer fire numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
 
           # if ($env:EXECUTOR -eq 'cpu') {
           #   pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
