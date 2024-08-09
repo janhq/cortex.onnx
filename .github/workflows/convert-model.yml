@@ -63,7 +63,7 @@ jobs:
         run: |
           # python.exe -m ensurepip
           # python.exe -m pip install --upgrade pip
-          pip3 install -I huggingface_hub hf-transfer numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
+          pip3 install -I --user huggingface_hub hf-transfer numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
 
           # if ($env:EXECUTOR -eq 'cpu') { fire
           #   pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
@@ -101,6 +101,14 @@ jobs:
           mkdir -p ${{ env.MODEL_NAME }}/onnx
           mkdir -p ${{ env.MODEL_NAME }}/cache
 
+
+
+      - name: Download Hugging Face model
+        run: |
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
+          huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
+          huggingface-cli logout
+
       - name: Cache Hugging Face model
         uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         with:
@@ -108,12 +116,6 @@ jobs:
           key: ${{ runner.os }}-hf-model-${{ github.sha }}
           restore-keys: |
             {{ runner.os }}-hf-model-
-
-      - name: Download Hugging Face model
-        run: |
-          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
-          huggingface-cli logout
 
       - name: Convert to ONNX - DirectML - INT4
         shell: powershell
