@@ -15,7 +15,7 @@ on:
         required: true
         type: string
       target_model_id:
-        description: "Target HuggingFace model ID to push. For ex: cortexso/llama3.1"
+        description: "Target HuggingFace model ID to push. For ex: llama3.1"
         required: true
         type: string
 
@@ -24,10 +24,10 @@ concurrency:
   cancel-in-progress: true
   
 env:
-  USER_NAME: jan-hq
-  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3-8B-Instruct #${{ inputs.source_model_id }}
+  USER_NAME: cortexso
+  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3.1-8B-Instruct #${{ inputs.source_model_id }}
   SOURCE_MODEL_SIZE: 8B #${{ inputs.source_model_size }}
-  TARGET_MODEL_ID: cortexso/llama3 #${{ inputs.target_model_id }}
+  TARGET_MODEL_ID: llama3.1 #${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
   ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
@@ -44,7 +44,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
         with:
-          python-version: '3.11.x'
+          python-version: '3.12.x'
           architecture: 'x64'
 
       - name: Cache Python packages
@@ -118,14 +118,15 @@ jobs:
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           cd onnxruntime-genai/src/python/py/models
           python3 builder.py -i "../../../../../${{ env.MODEL_NAME }}/hf" -o "../../../../../${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          cd "../../../../.."
           huggingface-cli logout
 
-      # - name: Upload to Hugging Face
-      #   run: |
-      #     Get-ChildItem -Path "${{ env.MODEL_NAME }}/onnx" -Force
-      #     huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
-      #     huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.MODEL_SIZE }}-onnx"
-      #     huggingface-cli logout
+      - name: Upload to Hugging Face
+        run: |
+          Get-ChildItem -Path "${{ env.MODEL_NAME }}/onnx" -Force
+          huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
+          huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} ${{ env.MODEL_NAME }}/onnx . --revision "${{ env.MODEL_SIZE }}-onnx"
+          huggingface-cli logout
 
       - name: Cleanup
         if: always()
