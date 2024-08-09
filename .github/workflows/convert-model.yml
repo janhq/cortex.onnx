@@ -59,16 +59,16 @@ jobs:
           python.exe -m pip install --upgrade pip
           pip install huggingface_hub hf-transfer fire numpy torch transformers onnx onnxruntime sentencepiece
 
-          if ($env:EXECUTOR -eq 'cpu') {
-            pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
-          } elseif ($env:EXECUTOR -eq 'dml') {
-            pip install --pre onnxruntime-genai-directml=="$env:ONNXRUNTIME_GENAI_VERSION"
-          } elseif ($env:EXECUTOR -eq 'cuda') {
-            pip install --pre onnxruntime-genai-cuda=="$env:ONNXRUNTIME_GENAI_VERSION" --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-          } else {
-            Write-Host "Error: Unknown EXECUTOR value: $env:EXECUTOR"
-            exit 1
-          }
+          # if ($env:EXECUTOR -eq 'cpu') {
+          #   pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
+          # } elseif ($env:EXECUTOR -eq 'dml') {
+          #   pip install --pre onnxruntime-genai-directml=="$env:ONNXRUNTIME_GENAI_VERSION"
+          # } elseif ($env:EXECUTOR -eq 'cuda') {
+          #   pip install --pre onnxruntime-genai-cuda=="$env:ONNXRUNTIME_GENAI_VERSION" --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
+          # } else {
+          #   Write-Host "Error: Unknown EXECUTOR value: $env:EXECUTOR"
+          #   exit 1
+          # }
 
           python -m onnxruntime_genai.models.builder --help
 
@@ -111,7 +111,8 @@ jobs:
 
       - name: Convert to ONNX - DirectML - INT4
         run: |
-          python -m onnxruntime_genai.models.builder -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
+          cd onnxruntime-genai/src/python/py/models
+          python3 builder.py -i "${{ env.MODEL_NAME }}/hf" -o "${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }}
 
       # - name: Upload to Hugging Face
       #   run: |
