@@ -25,7 +25,7 @@ on:
   
 env:
   USER_NAME: cortexso
-  SOURCE_MODEL_ID: google/gemma-2b #${{ inputs.source_model_id }}
+  SOURCE_MODEL_ID: google/gemma-2-2b-it #${{ inputs.source_model_id }}
   SOURCE_MODEL_SIZE: 2b #${{ inputs.source_model_size }}
   TARGET_MODEL_ID: gemma2 #${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
