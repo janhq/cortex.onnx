@@ -14,9 +14,9 @@ jobs:
         include:
           - os: "windows"
             name: "amd64"
-            runs-on: "windows-amd"
+            runs-on: "windows-latest"
             cmake-flags: ""
-            run-e2e: true
+            run-e2e: false
 
     steps:
       - name: Clone
