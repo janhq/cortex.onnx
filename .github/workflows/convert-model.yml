@@ -103,11 +103,11 @@ jobs:
 
 
       - name: Download Hugging Face model
-        if: ${{ hashFiles("C:\\models\\$${{ env.MODEL_NAME }}/hf") != '' }}
+        if: ${{ hashFiles("C:\\models\\${{ env.MODEL_NAME }}/hf") != '' }}
         run: |
-          mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/hf
-          mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/onnx
-          mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/cache
+          mkdir -p C:\\models\\${{ env.MODEL_NAME }}/hf
+          mkdir -p C:\\models\\${{ env.MODEL_NAME }}/onnx
+          mkdir -p C:\\models\\${{ env.MODEL_NAME }}/cache
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           huggingface-cli logout
