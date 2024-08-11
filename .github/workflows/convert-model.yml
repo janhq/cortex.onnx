@@ -100,11 +100,11 @@ jobs:
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/hf
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/onnx
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/cache
-      - name: Check file existence
-        id: check_files
-        uses: andstor/file-existence-action@v1
-        with:
-          files: "C:\\models\\${{ env.MODEL_NAME }}/hf"
+      # - name: Check file existence
+      #   id: check_files
+      #   uses: andstor/file-existence-action@v1
+      #   with:
+      #     files: "C:\\models\\${{ env.MODEL_NAME }}/hf"
 
       - name: Download Hugging Face model
         id: download_hf
