@@ -108,7 +108,7 @@ jobs:
 
       - name: Download Hugging Face model
         id: download_hf
-        if: steps.check_files.outputs.files_exists == 'true'
+        if: steps.check_files.outputs.files_exists == 'false'
         run: |
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/hf
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/onnx
@@ -117,7 +117,7 @@ jobs:
           huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           huggingface-cli logout
 
-      - name: Rollback Deployment
+      - name: Remove Failure Download
         if: steps.download_hf.outcome == 'failure'
         run: |
           Remove-Item -Recurse -Force -Path "$C:\\models\\{{ env.MODEL_NAME }}"
@@ -144,7 +144,7 @@ jobs:
           huggingface-cli upload ${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }} "C:\\models\\${{ env.MODEL_NAME }}/onnx" . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
           huggingface-cli logout
 
-      - name: Cleanup
-        if: always()
-        run: |
-          Remove-Item -Recurse -Force -Path "${{ env.MODEL_NAME }}"
+      # - name: Cleanup
+      #   if: always()
+      #   run: |
+      #     Remove-Item -Recurse -Force -Path "${{ env.MODEL_NAME }}"
