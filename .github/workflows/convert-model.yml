@@ -100,10 +100,15 @@ jobs:
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/hf
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/onnx
       #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/cache
-
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "C:\models\${{ env.MODEL_NAME }}/hf"
 
       - name: Download Hugging Face model
-        if: ${{ hashFiles("C:\models\${{ env.MODEL_NAME }}/hf") != '' }}
+        id: download_hf
+        if: steps.check_files.outputs.files_exists == 'true'
         run: |
           mkdir -p C:\models\${{ env.MODEL_NAME }}/hf
           mkdir -p C:\models\${{ env.MODEL_NAME }}/onnx
@@ -111,6 +116,11 @@ jobs:
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           huggingface-cli download --repo-type model --local-dir ${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           huggingface-cli logout
+
+      - name: Rollback Deployment
+        if: steps.download_hf.outcome == 'failure'
+        run: |
+          Remove-Item -Recurse -Force -Path "$C:\models\{{ env.MODEL_NAME }}"
 
       # - name: Cache Hugging Face model
       #   uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
