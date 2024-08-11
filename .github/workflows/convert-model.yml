@@ -94,25 +94,24 @@ jobs:
           echo "PRECISION: ${{ env.PRECISION }}"
           echo "EXECUTOR: ${{ env.EXECUTOR }}"
           echo "MODEL_NAME: ${{ env.MODEL_NAME }}"
+      - name: Check file existence
+        id: check_files
+        uses: andstor/file-existence-action@v1
+        with:
+          files: "C:\\models\\${{ env.MODEL_NAME }}/hf"
 
-      # - name: Prepare folders
-      #   run: |
-      #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/hf
-      #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/onnx
-      #     mkdir -p C:\\models\\$${{ env.MODEL_NAME }}/cache
-      # - name: Check file existence
-      #   id: check_files
-      #   uses: andstor/file-existence-action@v1
-      #   with:
-      #     files: "C:\\models\\${{ env.MODEL_NAME }}/hf"
 
-      - name: Download Hugging Face model
-        id: download_hf
-        # if: steps.check_files.outputs.files_exists == 'false'
+      - name: Prepare folders
+        if: steps.check_files.outputs.files_exists == 'false'
         run: |
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/hf
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/onnx
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/cache
+      
+      - name: Download Hugging Face model
+        id: download_hf
+        # if: steps.check_files.outputs.files_exists == 'false'
+        run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           huggingface-cli download --repo-type model --local-dir C:\\models\\${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           echo %ERRORLEVEL%
