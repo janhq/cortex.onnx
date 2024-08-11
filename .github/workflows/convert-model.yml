@@ -127,14 +127,14 @@ jobs:
         run: |
           mkdir -p ${{ env.MODEL_NAME }}/onnx
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "C:\\models\\${{ env.MODEL_NAME }}\\hf" -o "${{ env.MODEL_NAME }}\\onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }} -c "C:\\models\\${{ env.MODEL_NAME }}\\cache"
+          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "c:/models/${{ env.MODEL_NAME }}/hf" -o "c:/models/${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }} -c "c:/models/${{ env.MODEL_NAME }}/cache"
           huggingface-cli logout
 
       - name: Upload to Hugging Face
         run: |
           Get-ChildItem -Path "C:\\models\\${{ env.MODEL_NAME }}/onnx" -Force
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_WRITE }} --add-to-git-credential
-          huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "${{ env.MODEL_NAME }}\\onnx" . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
+          huggingface-cli upload "${{ env.USER_NAME }}/${{ env.TARGET_MODEL_ID }}" "c:/models/${{ env.MODEL_NAME }}/onnx" . --revision "${{ env.SOURCE_MODEL_SIZE }}-onnx"
           huggingface-cli logout
 
       - name: Cleanup
