@@ -108,7 +108,7 @@ jobs:
 
       - name: Download Hugging Face model
         id: download_hf
-        if: steps.check_files.outputs.files_exists == 'false'
+        # if: steps.check_files.outputs.files_exists == 'false'
         run: |
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/hf
           mkdir -p C:\\models\\${{ env.MODEL_NAME }}/onnx
