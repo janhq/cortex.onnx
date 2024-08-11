@@ -126,7 +126,7 @@ jobs:
         shell: powershell
         run: |
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
-          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "C:\\models\\${{ env.MODEL_NAME }}/hf" -o "C:\\models\\${{ env.MODEL_NAME }}/onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }} -c "C:\\models\\${{ env.MODEL_NAME }}/cache"
+          python3 "onnxruntime-genai/src/python/py/models/builder.py" -i "C:\\models\\${{ env.MODEL_NAME }}\\hf" -o "C:\\models\\${{ env.MODEL_NAME }}\\onnx" -p ${{ env.PRECISION }} -e ${{ env.EXECUTOR }} -c "C:\\models\\${{ env.MODEL_NAME }}\\cache"
           huggingface-cli logout
 
       - name: Upload to Hugging Face
