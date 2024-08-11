@@ -1,17 +1,16 @@
 name: Convert model to ONNX
 
 on:
-  push:
-    # Sequence of patterns matched against refs/heads
-    branches:
-      - 'chore/convert-onnx'
+  # push:
+  #   branches:
+  #     - 'chore/convert-onnx'
   workflow_dispatch:
     inputs:
       source_model_id:
         description: "Source HuggingFace model ID to pull. For ex: meta-llama/Meta-Llama-3.1-8B-Instruct"
         required: true
       source_model_size:
-        description: "The model size. For ex: 8B"
+        description: "The model size. For ex: 8b"
         required: true
         type: string
       target_model_id:
@@ -25,9 +24,9 @@ on:
   
 env:
   USER_NAME: cortexso
-  SOURCE_MODEL_ID: meta-llama/Meta-Llama-3.1-8B-Instruct #${{ inputs.source_model_id }}
-  SOURCE_MODEL_SIZE: 8b #${{ inputs.source_model_size }}
-  TARGET_MODEL_ID: llama3.1 #${{ inputs.target_model_id }}
+  SOURCE_MODEL_ID:  ${{ inputs.source_model_id }}
+  SOURCE_MODEL_SIZE: ${{ inputs.source_model_size }}
+  TARGET_MODEL_ID:  ${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
   ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
@@ -61,22 +60,7 @@ jobs:
       - name: Install dependencies
         shell: powershell
         run: |
-          # python.exe -m ensurepip
-          # python.exe -m pip install --upgrade pip
           pip3 install -I --user huggingface_hub hf-transfer numpy==1.26.4 torch==2.3.1 transformers==4.43.4 onnx==1.16.1 onnxruntime==1.18.0 sentencepiece==0.2.0
-
-          # if ($env:EXECUTOR -eq 'cpu') { fire
-          #   pip install --pre onnxruntime-genai=="$env:ONNXRUNTIME_GENAI_VERSION"
-          # } elseif ($env:EXECUTOR -eq 'dml') {
-          #   pip install --pre onnxruntime-genai-directml=="$env:ONNXRUNTIME_GENAI_VERSION"
-          # } elseif ($env:EXECUTOR -eq 'cuda') {
-          #   pip install --pre onnxruntime-genai-cuda=="$env:ONNXRUNTIME_GENAI_VERSION" --index-url=https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-          # } else {
-          #   Write-Host "Error: Unknown EXECUTOR value: $env:EXECUTOR"
-          #   exit 1
-          # }
-
-          # python -m onnxruntime_genai.models.builder --help
 
       - name: Extract MODEL_NAME
         shell: powershell
