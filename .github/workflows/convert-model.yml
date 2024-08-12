@@ -1,9 +1,6 @@
 name: Convert model to ONNX
 
 on:
-  # push:
-  #   branches:
-  #     - 'chore/convert-onnx'
   workflow_dispatch:
     inputs:
       source_model_id:
@@ -18,9 +15,6 @@ on:
         required: true
         type: string
 
-# concurrency:
-#   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
-#   cancel-in-progress: true
   
 env:
   USER_NAME: cortexso
@@ -29,8 +23,7 @@ env:
   TARGET_MODEL_ID:  ${{ inputs.target_model_id }}
   PRECISION: int4                   # Valid values: int4,fp16,fp3
   EXECUTOR: dml                     # Valid values: cpu,cuda,dml,web
-  ONNXRUNTIME_GENAI_VERSION: 0.3.0  # Check version from: https://github.com/microsoft/onnxruntime-genai/releases
-  
+
 jobs:
   converter:
     runs-on: windows-onnx
@@ -99,12 +92,6 @@ jobs:
           huggingface-cli login --token ${{ secrets.HUGGINGFACE_TOKEN_READ }} --add-to-git-credential
           huggingface-cli download --repo-type model --local-dir C:\\models\\${{ env.MODEL_NAME }}/hf ${{ env.SOURCE_MODEL_ID }}
           huggingface-cli logout
-
-      # - name: Remove Failure Download
-      #   if: steps.download_hf.outcome == 'failure'
-      #   run: |
-      #     Remove-Item -Recurse -Force -Path "$C:\\models\\{{ env.MODEL_NAME }}"
-
 
       - name: Convert to ONNX - DirectML - INT4
         shell: powershell
